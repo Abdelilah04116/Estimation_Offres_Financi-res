@@ -302,7 +302,7 @@ Le modèle utilise les features suivantes :
 ## 📞 Support
 
 Pour toute question ou support, veuillez contacter :
-- Email : abdelilah.ourti@example.com
+- Email : abdelilahourti@gmail.com
 
 
 ---
