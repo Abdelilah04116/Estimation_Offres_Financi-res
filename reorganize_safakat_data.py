@@ -1,241 +1,324 @@
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Script Python pour extraire les données pertinentes de Safakat dans un CSV clair
+Script pour organiser les données Safakat d'un fichier JSON/CSV vers un format CSV structuré
+Auteur: Assistant IA - Expert en organisation de données
+Dépendances: pandas, json, csv, datetime
 """
 
-import csv
-import re
-import sys
-import os
 import json
+import csv
 import pandas as pd
+from datetime import datetime
+import re
+import os
+import sys
 
-def clean_unicode_chars(text):
-    """Nettoie les caractères Unicode problématiques"""
-    text = text.replace('’', "'").replace('‘', "'")
-    text = text.replace('“', '"').replace('”', '"')
-    text = text.replace('°', 'deg').replace('€', 'EUR').replace('…', '...')
-    return text
-
-def extract_field_exact(text, field_name):
-    """Extrait un champ texte avec patterns multiples"""
-    patterns = [
-        rf"{field_name}'\":\s*'\"([^\"]*?)\"'",  # fieldName'": '"value"'
-        rf"'{field_name}':\s*'\"([^\"]*?)\"'",   # 'fieldName': '"value"'
-        rf'"{field_name}":\s*"([^"]*)"',
-        rf'{field_name}":\s*"([^"]*)"',
-        rf'{field_name}[^"]*"([^"]+)"',
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
-        if match and match.group(1).strip():
-            value = match.group(1).strip().replace('\\"', '"').replace("\\'", "'")
-            if len(value) > 2:
-                return value
-    return ""
-
-def extract_numeric_exact(text, field_name):
-    """Extrait une valeur numérique"""
-    patterns = [
-        rf"{field_name}'\":\s*([0-9.]+)",  # fieldName'": number
-        rf"'{field_name}':\s*([0-9.]+)",
-        rf'"{field_name}":\s*([0-9.]+)',
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, text)
-        if match:
-            try:
-                return float(match.group(1))
-            except ValueError:
-                pass
-    return None
-
-def extract_list_exact(text, field_name):
-    """Extrait une liste (ex. : provinces, domains, qualifications)"""
-    patterns = [
-        rf"{field_name}'\":\s*\[\s*([^\]]*)\]",  # fieldName'": [values]
-        rf"'{field_name}':\s*\[\s*([^\]]*)\]",
-        rf'"{field_name}":\s*\[\s*([^\]]*)\]',
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, text, re.DOTALL)
-        if match and match.group(1).strip():
-            items = [item.strip().replace('"', '').replace("'", "") for item in match.group(1).split(',') if item.strip()]
-            return items
-    return []
-
-def extract_online_results(text):
-    """Extrait les soumissionnaires et leurs montants"""
-    results = []
-    pattern = r'\{[^}]*company[^}]*companyName[^}]*"([^"]+)"[^}]*priceAfterCorrection[^}]*([0-9.]+)[^}]*\}'
-    matches = re.finditer(pattern, text, re.DOTALL)
-    for match in matches:
-        company_name = match.group(1).strip().replace('\\"', '"').replace("\\'", "'")
-        price = float(match.group(2)) if match.group(2) else None
-        if company_name and price and price > 0:
-            results.append({"companyName": company_name, "priceAfterCorrection": price})
-    return results
-
-def extract_lots_and_ao(line):
-    """Extrait les données pertinentes d'une ligne"""
-    line = clean_unicode_chars(line)
+def clean_json_line(line):
+    """
+    Nettoie et corrige le format JSON d'une ligne
+    """
+    if not line.strip():
+        return None
     
-    # Extraire les champs de l'AO
-    ao_data = {
-        'org': extract_field_exact(line, 'org'),
-        'consId': extract_numeric_exact(line, 'consId'),
-        'reference': extract_field_exact(line, 'reference'),
-        'acheteur': extract_field_exact(line, 'acheteur'),
-        'procedureType': extract_field_exact(line, 'procedureType'),
-        'publishedDate': extract_field_exact(line, 'publishedDate'),
-        'endDate': extract_field_exact(line, 'endDate'),
-        'provinces': extract_list_exact(line, 'provinces'),
-        'isConsCancelled': extract_field_exact(line, 'isConsCancelled') == 'true',
-        'domains': extract_list_exact(line, 'domains'),
-        'administratifName': extract_field_exact(line, 'administratifName'),
-        'administratifEmail': extract_field_exact(line, 'administratifEmail')
-    }
+    # Enlever les guillemets externes si présents
+    cleaned_line = line.strip()
+    if cleaned_line.startswith('"') and cleaned_line.endswith('"'):
+        cleaned_line = cleaned_line[1:-1]
     
-    # Trouver tous les lots
-    lots = []
-    lot_pattern = r'lotId[^0-9]*(\d+)'
-    matches = re.finditer(lot_pattern, line)
+    # Corriger le format des guillemets échappés
+    cleaned_line = cleaned_line.replace('\\"', '"')
+    cleaned_line = cleaned_line.replace('{\'"', '{"')
+    cleaned_line = cleaned_line.replace('"\'', '"')
+    cleaned_line = cleaned_line.replace('\'"', '"')
+    cleaned_line = cleaned_line.replace('\': \'', '": "')
+    cleaned_line = cleaned_line.replace('\', \'', '", "')
+    cleaned_line = cleaned_line.replace('\'}', '"}')
+    cleaned_line = cleaned_line.replace('\']', '"]')
+    cleaned_line = cleaned_line.replace('[\'', '["')
     
-    for match in matches:
-        lot_id = int(match.group(1))
-        position = match.start()
-        section_start = max(0, position - 200)
-        section_end = min(len(line), position + 3000)
-        section = line[section_start:section_end]
-        
-        lot_data = {
-            'lotId': lot_id,
-            'lotObject': extract_field_exact(section, 'lotObject'),
-            'lotCategory': extract_field_exact(section, 'lotCategory'),
-            'lotEstimation': extract_numeric_exact(section, 'lotEstimation'),
-            'finalPrice': extract_numeric_exact(section, 'finalPrice'),
-            'winner': extract_field_exact(section, 'winner'),
-            'lotCaution': extract_numeric_exact(section, 'lotCaution'),
-            'lotReserve': extract_field_exact(section, 'lotReserve'),
-            'isQualified': extract_field_exact(section, 'isQualified') == 'true',
-            'lotResultStatus': extract_field_exact(section, 'lotResultStatus'),
-            'juryDate': extract_field_exact(section, 'juryDate'),
-            'qualifications': extract_list_exact(section, 'qualifications'),
-            'onlineResults': extract_online_results(section)
-        }
-        lots.append(lot_data)
-    
-    return ao_data, lots
+    return cleaned_line
 
-def process_safakat_file(input_file, output_file):
-    """Traite le fichier Safakat et génère un CSV avec les données pertinentes"""
-    print(f"🚀 Lecture du fichier: {input_file}")
+def parse_date(date_string):
+    """
+    Parse une date ISO et la retourne au format français
+    """
+    if not date_string:
+        return ''
+    try:
+        date_obj = datetime.fromisoformat(date_string.replace('Z', '+00:00'))
+        return date_obj.strftime('%d/%m/%Y')
+    except:
+        return date_string
+
+def organize_safakat_data_compact(input_file, output_file='safakat_aos_organises.csv'):
+    """
+    Organise les données Safakat en format CSV compact (une ligne par AO)
+    """
+    print("📖 Lecture du fichier source...")
+    
+    all_aos = []
+    total_lines = 0
+    processed_lines = 0
     
     try:
-        with open(input_file, 'r', encoding='utf-8') as f:
-            content = f.read()
+        with open(input_file, 'r', encoding='utf-8') as file:
+            for line_num, line in enumerate(file, 1):
+                total_lines += 1
+                try:
+                    cleaned_line = clean_json_line(line)
+                    if cleaned_line:
+                        data = json.loads(cleaned_line)
+                        if 'data' in data and data['data']:
+                            processed_lines += 1
+                            
+                            for ao in data['data']:
+                                # Extraire les informations principales de l'AO
+                                transformed_ao = {
+                                    # Informations générales
+                                    'consId': ao.get('consId', ''),
+                                    'reference': ao.get('reference', ''),
+                                    'acheteur': ao.get('acheteur', ''),
+                                    'org': ao.get('org', ''),
+                                    'AchAbr': ao.get('AchAbr', ''),
+                                    
+                                    # Dates
+                                    'publishedDate': parse_date(ao.get('publishedDate')),
+                                    'endDate': parse_date(ao.get('endDate')),
+                                    'createdAt': parse_date(ao.get('createdAt')),
+                                    
+                                    # Procédure
+                                    'procedureType': ao.get('procedureType', ''),
+                                    'reponseType': ao.get('reponseType', ''),
+                                    'isConsCancelled': 'Oui' if ao.get('isConsCancelled') else 'Non',
+                                    
+                                    # Localisation
+                                    'provinces': ', '.join(ao.get('provinces', [])),
+                                    
+                                    # Contact administratif
+                                    'administratifName': ao.get('administratifName', ''),
+                                    'administratifEmail': ao.get('administratifEmail', ''),
+                                    'administratifTel': ao.get('administratifTel', ''),
+                                    'administratifFax': ao.get('administratifFax', ''),
+                                    
+                                    # URL et documents
+                                    'detailsUrl': ao.get('detailsUrl', ''),
+                                    'consDAO': ao.get('consDAO', ''),
+                                    
+                                    # Informations sur les lots (premier lot ou résumé)
+                                    'nombreLots': len(ao.get('lots', [])),
+                                    'premierLotId': ao.get('lots', [{}])[0].get('lotId', '') if ao.get('lots') else '',
+                                    'premierLotObject': ao.get('lots', [{}])[0].get('lotObject', '') if ao.get('lots') else '',
+                                    'premierLotCategory': ao.get('lots', [{}])[0].get('lotCategory', '') if ao.get('lots') else '',
+                                    'premierLotEstimation': ao.get('lots', [{}])[0].get('lotEstimation', 0) if ao.get('lots') else 0,
+                                    'premierLotCaution': ao.get('lots', [{}])[0].get('lotCaution', 0) if ao.get('lots') else 0,
+                                    'premierLotReserve': ao.get('lots', [{}])[0].get('lotReserve', '') if ao.get('lots') else '',
+                                    'premierLotQualified': 'Oui' if (ao.get('lots') and ao.get('lots')[0].get('isQualified')) else 'Non',
+                                    
+                                    # Estimation totale (somme de tous les lots)
+                                    'estimationTotale': sum(lot.get('lotEstimation', 0) for lot in ao.get('lots', [])),
+                                    
+                                    # Domaines d'activité
+                                    'nombreDomaines': len(ao.get('domains', [])),
+                                    'domainesPrincipaux': ', '.join(d.get('domain', '') for d in ao.get('domains', [])),
+                                    'activitesPrincipales': ', '.join(d.get('activite', '') for d in ao.get('domains', [])),
+                                    'sousDomaines': ', '.join(d.get('sousDomain', '') for d in ao.get('domains', [])),
+                                    
+                                    # Visites (du premier lot)
+                                    'nombreVisites': len(ao.get('lots', [{}])[0].get('visites', [])) if ao.get('lots') else 0,
+                                    'premiereDateVisite': parse_date(ao.get('lots', [{}])[0].get('visites', [{}])[0].get('date', '')) 
+                                                        if (ao.get('lots') and ao.get('lots')[0].get('visites')) else '',
+                                    
+                                    # Statuts
+                                    'isFavoris': 'Oui' if ao.get('isFavoris') else 'Non',
+                                    'nombreAvertissements': len(ao.get('avertissements', []))
+                                }
+                                
+                                all_aos.append(transformed_ao)
+                                
+                except json.JSONDecodeError as e:
+                    print(f"⚠️ Erreur JSON ligne {line_num}: {str(e)}")
+                except Exception as e:
+                    print(f"⚠️ Erreur traitement ligne {line_num}: {str(e)}")
+    
+    except FileNotFoundError:
+        print(f"❌ Fichier '{input_file}' non trouvé!")
+        return False
     except Exception as e:
-        print(f"❌ Erreur lecture: {e}")
-        return
+        print(f"❌ Erreur lecture fichier: {str(e)}")
+        return False
     
-    lines = [line.strip() for line in content.split('\n') if line.strip()]
-    print(f"📄 Lignes trouvées: {len(lines)}")
+    print(f"✅ {len(all_aos)} AOs extraits de {processed_lines}/{total_lines} lignes")
     
-    # En-têtes CSV
-    headers = [
-        'ao_id', 'reference', 'acheteur', 'procedure_type', 'published_date', 'end_date',
-        'provinces', 'is_cancelled', 'domains', 'administratif_name', 'administratif_email',
-        'lot_id', 'lot_object', 'lot_category', 'lot_estimation', 'final_price', 'winner',
-        'lot_caution', 'lot_reserve', 'is_qualified', 'lot_result_status', 'jury_date',
-        'qualifications', 'soumissionnaires', 'montants_soumis', 'nombre_soumissionnaires'
-    ]
-    
-    rows = []
-    for i, line in enumerate(lines):
-        try:
-            print(f"⚙️ Traitement ligne {i+1}/{len(lines)}", end='\r')
-            ao_data, lots = extract_lots_and_ao(line)
+    # Générer le CSV avec pandas
+    print("📝 Génération du fichier CSV...")
+    try:
+        df = pd.DataFrame(all_aos)
+        df.to_csv(output_file, index=False, encoding='utf-8-sig', sep=',', quotechar='"')
+        print(f"🎉 Fichier CSV généré: {output_file}")
+        print(f"📊 Statistiques: {len(all_aos)} AOs, {len(df.columns)} colonnes")
+        
+        # Afficher les colonnes
+        print("\n📋 Colonnes disponibles dans le CSV:")
+        for i, col in enumerate(df.columns, 1):
+            print(f"   {i:2d}. {col}")
             
-            for lot in lots:
-                soumissionnaires = [res["companyName"] for res in lot['onlineResults']]
-                montants_soumis = [res["priceAfterCorrection"] for res in lot['onlineResults']]
-                row = {
-                    'ao_id': ao_data['consId'],
-                    'reference': ao_data['reference'],
-                    'acheteur': ao_data['acheteur'],
-                    'procedure_type': ao_data['procedureType'],
-                    'published_date': ao_data['publishedDate'],
-                    'end_date': ao_data['endDate'],
-                    'provinces': ';'.join(ao_data['provinces']),
-                    'is_cancelled': ao_data['isConsCancelled'],
-                    'domains': ';'.join(ao_data['domains']),
-                    'administratif_name': ao_data['administratifName'],
-                    'administratif_email': ao_data['administratifEmail'],
-                    'lot_id': lot['lotId'],
-                    'lot_object': lot['lotObject'],
-                    'lot_category': lot['lotCategory'],
-                    'lot_estimation': lot['lotEstimation'],
-                    'final_price': lot['finalPrice'],
-                    'winner': lot['winner'],
-                    'lot_caution': lot['lotCaution'],
-                    'lot_reserve': lot['lotReserve'],
-                    'is_qualified': lot['isQualified'],
-                    'lot_result_status': lot['lotResultStatus'],
-                    'jury_date': lot['juryDate'],
-                    'qualifications': ';'.join(lot['qualifications']),
-                    'soumissionnaires': ';'.join(soumissionnaires),
-                    'montants_soumis': ';'.join([str(m) for m in montants_soumis]),
-                    'nombre_soumissionnaires': len(soumissionnaires)
-                }
-                rows.append(row)
-        except Exception as e:
-            print(f"\n⚠️ Erreur ligne {i+1}: {e}")
-            continue
+        return True
+        
+    except Exception as e:
+        print(f"❌ Erreur génération CSV: {str(e)}")
+        return False
+
+def organize_safakat_data_detailed(input_file, output_file='safakat_lots_detailles.csv'):
+    """
+    Organise les données Safakat en format CSV détaillé (une ligne par lot)
+    """
+    print("\n🔄 Version détaillée: Un CSV avec une ligne par lot...")
     
-    # Créer le DataFrame
-    df = pd.DataFrame(rows)
+    all_lots = []
+    total_lines = 0
+    processed_lines = 0
     
-    # Convertir les colonnes numériques
-    numeric_cols = ['lot_estimation', 'final_price', 'lot_caution', 'nombre_soumissionnaires']
-    for col in numeric_cols:
-        df[col] = pd.to_numeric(df[col], errors='coerce')
+    try:
+        with open(input_file, 'r', encoding='utf-8') as file:
+            for line_num, line in enumerate(file, 1):
+                total_lines += 1
+                try:
+                    cleaned_line = clean_json_line(line)
+                    if cleaned_line:
+                        data = json.loads(cleaned_line)
+                        if 'data' in data and data['data']:
+                            processed_lines += 1
+                            
+                            for ao in data['data']:
+                                # Pour chaque lot de l'AO
+                                if ao.get('lots'):
+                                    for lot_index, lot in enumerate(ao['lots']):
+                                        lot_record = {
+                                            # Infos AO
+                                            'consId': ao.get('consId', ''),
+                                            'reference': ao.get('reference', ''),
+                                            'acheteur': ao.get('acheteur', ''),
+                                            'org': ao.get('org', ''),
+                                            'procedureType': ao.get('procedureType', ''),
+                                            'publishedDate': parse_date(ao.get('publishedDate')),
+                                            'endDate': parse_date(ao.get('endDate')),
+                                            'provinces': ', '.join(ao.get('provinces', [])),
+                                            
+                                            # Infos lot
+                                            'lotIndex': lot_index + 1,
+                                            'lotId': lot.get('lotId', ''),
+                                            'lotNbr': lot.get('lotNbr', ''),
+                                            'lotObject': lot.get('lotObject', ''),
+                                            'lotDesc': lot.get('lotDesc', ''),
+                                            'lotCategory': lot.get('lotCategory', ''),
+                                            'lotEstimation': lot.get('lotEstimation', 0),
+                                            'lotCaution': lot.get('lotCaution', 0),
+                                            'lotReserve': lot.get('lotReserve', ''),
+                                            'isQualified': 'Oui' if lot.get('isQualified') else 'Non',
+                                            'lotVarianteValeur': lot.get('lotVarianteValeur', ''),
+                                            
+                                            # Résultats
+                                            'winner': lot.get('winner', ''),
+                                            'contractor': lot.get('contractor', ''),
+                                            'finalPrice': lot.get('finalPrice', ''),
+                                            'lotResultStatus': lot.get('lotResultStatus', ''),
+                                            
+                                            # Qualifications
+                                            'nombreQualifications': len(lot.get('qualifications', [])),
+                                            'qualificationsSecteurs': ', '.join(q.get('secteur', '') for q in lot.get('qualifications', [])),
+                                            
+                                            # Visites
+                                            'nombreVisites': len(lot.get('visites', [])),
+                                            'premiereVisite': parse_date(lot.get('visites', [{}])[0].get('date', '')) if lot.get('visites') else '',
+                                            
+                                            # Échantillons
+                                            'lotEchantillonsDate': parse_date(lot.get('lotEchantillonsDate', '')),
+                                            'lotEchantillonsDesc': lot.get('lotEchantillonsDesc', ''),
+                                            
+                                            # Contact
+                                            'administratifName': ao.get('administratifName', ''),
+                                            'administratifEmail': ao.get('administratifEmail', ''),
+                                            'administratifTel': ao.get('administratifTel', '')
+                                        }
+                                        
+                                        all_lots.append(lot_record)
+                                        
+                except json.JSONDecodeError as e:
+                    print(f"⚠️ Erreur JSON ligne {line_num}: {str(e)}")
+                except Exception as e:
+                    print(f"⚠️ Erreur traitement ligne {line_num}: {str(e)}")
     
-    # Convertir les colonnes booléennes
-    bool_cols = ['is_cancelled', 'is_qualified']
-    for col in bool_cols:
-        df[col] = df[col].astype(bool)
+    except FileNotFoundError:
+        print(f"❌ Fichier '{input_file}' non trouvé!")
+        return False
+    except Exception as e:
+        print(f"❌ Erreur lecture fichier: {str(e)}")
+        return False
     
-    # Sauvegarder dans un fichier CSV
-    df.to_csv(output_file, index=False, encoding='utf-8')
-    print(f"\n🎉 Données extraites et sauvegardées dans {output_file}")
-    print(f"📊 Total lots extraits: {len(rows)}")
+    print(f"✅ {len(all_lots)} lots extraits de {processed_lines}/{total_lines} lignes")
+    
+    # Générer le CSV avec pandas
+    print("📝 Génération du fichier CSV détaillé...")
+    try:
+        df = pd.DataFrame(all_lots)
+        df.to_csv(output_file, index=False, encoding='utf-8-sig', sep=',', quotechar='"')
+        print(f"🎉 Fichier CSV détaillé généré: {output_file}")
+        print(f"📊 Statistiques: {len(all_lots)} lots, {len(df.columns)} colonnes")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Erreur génération CSV: {str(e)}")
+        return False
 
 def main():
-    print("🚀 EXTRACTEUR SAFAKAT - DONNÉES PERTINENTES")
+    """
+    Fonction principale du script
+    """
+    print("🚀 Script d'organisation des données Safakat")
     print("=" * 50)
     
-    if len(sys.argv) < 2:
-        print("Usage: python script.py <fichier_entree> [fichier_sortie]")
-        print('Exemple: python script.py "Safakat Test 1000 AOs.csv"')
-        sys.exit(1)
+    # Fichier d'entrée
+    input_file = 'Safakat Test 1000 AOs.csv'
     
-    input_file = sys.argv[1]
-    output_file = sys.argv[2] if len(sys.argv) > 2 else 'AO_reorganized.csv'
-    
+    # Vérifier l'existence du fichier
     if not os.path.exists(input_file):
-        print(f'❌ Fichier "{input_file}" introuvable')
-        sys.exit(1)
+        print(f"❌ Le fichier '{input_file}' n'existe pas!")
+        print("📝 Assurez-vous que le fichier est dans le même répertoire que ce script.")
+        return
     
-    print(f"📂 Fichier d'entrée: {input_file}")
-    print(f"📄 Fichier de sortie: {output_file}")
-    print("-" * 50)
+    # Demander à l'utilisateur quel format il souhaite
+    print("\nChoisissez le format de sortie:")
+    print("1. Format compact (une ligne par AO)")
+    print("2. Format détaillé (une ligne par lot)")
+    print("3. Les deux formats")
     
-    process_safakat_file(input_file, output_file)
-    
-    print("\n" + "=" * 50)
-    print("✨ Extraction terminée!")
+    try:
+        choice = input("\nVotre choix (1, 2 ou 3): ").strip()
+        
+        if choice in ['1', '3']:
+            print("\n" + "="*50)
+            print("📊 GÉNÉRATION DU FORMAT COMPACT")
+            print("="*50)
+            success1 = organize_safakat_data_compact(input_file)
+            
+        if choice in ['2', '3']:
+            print("\n" + "="*50)
+            print("📊 GÉNÉRATION DU FORMAT DÉTAILLÉ")
+            print("="*50)
+            success2 = organize_safakat_data_detailed(input_file)
+        
+        if choice in ['1', '2', '3']:
+            print("\n🏆 Traitement terminé!")
+            print("📁 Vérifiez les fichiers CSV générés dans le répertoire courant.")
+        else:
+            print("❌ Choix invalide. Veuillez relancer le script.")
+            
+    except KeyboardInterrupt:
+        print("\n\n⏹️  Script interrompu par l'utilisateur.")
+    except Exception as e:
+        print(f"\n❌ Erreur inattendue: {str(e)}")
 
 if __name__ == "__main__":
     main()
