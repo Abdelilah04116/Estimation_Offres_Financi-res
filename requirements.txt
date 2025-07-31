@@ -1,0 +1,16 @@
+# Bibliothèques pour l'analyse de données
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Bibliothèques pour l'apprentissage automatique
+scikit-learn>=1.1.0
+xgboost>=1.6.0
+joblib>=1.1.0
+
+# Interface utilisateur
+streamlit>=1.25.0
+
+# Visualisations
+plotly>=5.0.0
+
+# Note: warnings est un module intégré à Python, pas besoin de l'installer
