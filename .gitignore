@@ -1,2 +1,41 @@
 # Ignorer les fichiers d'environnement
 env
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.sav
+*.model
+
+# Ignorer les fichiers de données
+*.csv
+*.tsv
+*.xls
+*.xlsx
+
+# Ignorer les dossiers contenant les modèles ou données
+/models/
+/data/
+
+# Cache, logs et autres fichiers générés automatiquement
+*.log
+*.tmp
+*.cache
+__pycache__/
+*.pyc
+
+# Environnements virtuels
+.venv/
+env/
+venv/
+
+# Fichiers Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Configuration IDE (VSCode, PyCharm, etc.)
+.vscode/
+.idea/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
