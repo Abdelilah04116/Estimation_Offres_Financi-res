@@ -11,7 +11,7 @@ warnings.filterwarnings('ignore')
 # Configuration de la page
 st.set_page_config(
     page_title="Prédicteur d'Appels d'Offres",
-    page_icon="📊",
+    page_icon="",
     layout="wide"
 )
 
@@ -26,7 +26,7 @@ def load_models():
         feature_columns = joblib.load('feature_columns.pkl')
         return clf_model, reg_model, scaler, encoders, feature_columns
     except FileNotFoundError:
-        st.error("❌ Modèles non trouvés. Veuillez d'abord exécuter le script d'entraînement.")
+        st.error("Modèles non trouvés. Veuillez d'abord exécuter le script d'entraînement.")
         return None, None, None, None, None
 
 def predict_probability(budget, montant_propose, nombre_concurrents, delai, 
@@ -90,7 +90,7 @@ def simulate_price_range(budget, nombre_concurrents, delai, experience, notation
     return price_range, probabilities
 
 def main():
-    st.title("🎯 Prédicteur d'Appels d'Offres")
+    st.title("Prédicteur d'Appels d'Offres")
     st.markdown("---")
     
     # Vérifier si les modèles sont chargés
@@ -99,35 +99,35 @@ def main():
         st.stop()
     
     # Sidebar pour les paramètres
-    st.sidebar.header("📋 Paramètres de l'Appel d'Offres")
+    st.sidebar.header("Paramètres de l'Appel d'Offres")
     
     # Paramètres de base
-    budget = st.sidebar.number_input("💰 Budget estimé (DH)", min_value=1000, value=1000000, step=10000)
-    montant_propose = st.sidebar.number_input("💵 Montant proposé (DH)", min_value=1000, value=int(budget*0.95), step=1000)
-    nombre_concurrents = st.sidebar.slider("👥 Nombre de concurrents", 1, 20, 5)
-    delai = st.sidebar.slider("⏱️ Délai d'exécution (jours)", 30, 365, 120)
+    budget = st.sidebar.number_input("Budget estimé (DH)", min_value=1000, value=1000000, step=10000)
+    montant_propose = st.sidebar.number_input("Montant proposé (DH)", min_value=1000, value=int(budget*0.95), step=1000)
+    nombre_concurrents = st.sidebar.slider("Nombre de concurrents", 1, 20, 5)
+    delai = st.sidebar.slider("Délai d'exécution (jours)", 30, 365, 120)
     
     # Paramètres de l'entreprise
-    st.sidebar.subheader("🏢 Profil de l'entreprise")
-    experience = st.sidebar.slider("📈 Expérience (années)", 0, 30, 10)
-    notation = st.sidebar.slider("⭐ Notation technique", 0, 100, 75)
+    st.sidebar.subheader("Profil de l'entreprise")
+    experience = st.sidebar.slider("Expérience (années)", 0, 30, 10)
+    notation = st.sidebar.slider("Notation technique", 0, 100, 75)
     
     # Paramètres catégoriels
-    st.sidebar.subheader("🏷️ Caractéristiques du marché")
-    secteur = st.sidebar.selectbox("🏭 Secteur", [
+    st.sidebar.subheader("Caractéristiques du marché")
+    secteur = st.sidebar.selectbox("Secteur", [
         "Informatique", "BTP", "Maintenance", "Agriculture", "Santé", 
         "Éducation", "Transport", "Énergie", "Télécommunications"
     ])
     
-    procedure = st.sidebar.selectbox("📋 Type de procédure", [
+    procedure = st.sidebar.selectbox("Type de procédure", [
         "Appel d'offres ouvert", "Appel d'offres restreint", "Concours", "Négociation"
     ])
     
-    critere = st.sidebar.selectbox("🎯 Critère d'attribution", [
+    critere = st.sidebar.selectbox("Critère d'attribution", [
         "Prix seul", "Rapport qualité-prix", "Critères multiples", "Meilleure offre économiquement"
     ])
     
-    complexite = st.sidebar.selectbox("🔧 Complexité du projet", [
+    complexite = st.sidebar.selectbox("Complexité du projet", [
         "Faible", "Moyenne", "Élevée"
     ])
     
@@ -135,7 +135,7 @@ def main():
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.header("🎲 Prédiction de Probabilité")
+        st.header("Prédiction de Probabilité")
         
         # Prédiction pour le montant proposé
         probability, predicted_amount = predict_probability(
@@ -156,14 +156,14 @@ def main():
             
             # Indicateur de couleur
             if probability > 0.6:
-                st.success("🎉 Excellente chance de gagner!")
+                st.success("Excellente chance de gagner!")
             elif probability > 0.4:
-                st.warning("⚠️ Chance moyenne de gagner")
+                st.warning("Chance moyenne de gagner")
             else:
-                st.error("❌ Faible chance de gagner")
+                st.error("Faible chance de gagner")
             
             # Simulation de la fourchette de prix
-            st.subheader("📊 Analyse de la fourchette de prix optimale")
+            st.subheader("Analyse de la fourchette de prix optimale")
             
             price_range, probabilities = simulate_price_range(
                 budget, nombre_concurrents, delai, experience, notation, 
@@ -208,12 +208,12 @@ def main():
             if optimal_prices:
                 min_optimal = min(optimal_prices)
                 max_optimal = max(optimal_prices)
-                st.success(f"💡 **Fourchette recommandée (≥60% de chance):** {min_optimal:,.0f} - {max_optimal:,.0f} DH")
+                st.success(f"Fourchette recommandée (≥60% de chance): {min_optimal:,.0f} - {max_optimal:,.0f} DH")
             else:
-                st.warning("⚠️ Aucun prix dans cette plage n'atteint 60% de probabilité")
+                st.warning("Aucun prix dans cette plage n'atteint 60% de probabilité")
     
     with col2:
-        st.header("📈 Statistiques")
+        st.header("Statistiques")
         
         # Métriques clés
         ratio_prix_budget = montant_propose / budget
@@ -229,7 +229,7 @@ def main():
             st.metric("Montant Gagnant Prédit", f"{predicted_amount:,.0f} DH")
         
         # Graphique radial des facteurs
-        st.subheader("🎯 Profil de l'offre")
+        st.subheader("Profil de l'offre")
         
         categories = ['Expérience', 'Notation', 'Compétitivité Prix', 'Délai']
         values = [
@@ -259,7 +259,7 @@ def main():
         st.plotly_chart(fig_radar, use_container_width=True)
         
         # Conseils
-        st.subheader("💡 Conseils")
+        st.subheader("Conseils")
         
         if ratio_prix_budget > 1.1:
             st.warning("Prix élevé par rapport au budget")
@@ -275,12 +275,12 @@ def main():
             st.success("Excellente notation technique")
     
     # Section d'analyse avancée
-    st.header("🔍 Analyse Avancée")
+    st.header("Analyse Avancée")
     
     tabs = st.tabs(["Simulation Multi-Prix", "Analyse Concurrentielle", "Historique"])
     
     with tabs[0]:
-        st.subheader("💰 Simulation de plusieurs prix")
+        st.subheader("Simulation de plusieurs prix")
         
         # Permettre à l'utilisateur de tester plusieurs prix
         test_prices = st.text_input("Prix à tester (séparés par des virgules)", 
@@ -310,7 +310,7 @@ def main():
                 st.error("Format invalide. Utilisez des nombres séparés par des virgules.")
     
     with tabs[1]:
-        st.subheader("👥 Impact du nombre de concurrents")
+        st.subheader("Impact du nombre de concurrents")
         
         competitor_range = range(1, 21)
         competitor_probs = []
@@ -341,7 +341,7 @@ def main():
         st.plotly_chart(fig_comp, use_container_width=True)
     
     with tabs[2]:
-        st.subheader("📊 Données de référence")
+        st.subheader("Données de référence")
         st.info("Cette section pourrait afficher l'historique des AO similaires dans le secteur sélectionné")
         
         # Simulation de données historiques

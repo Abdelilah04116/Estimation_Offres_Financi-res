@@ -1,6 +1,6 @@
 # Ignorer les fichiers d'environnement
 env
-*.pkl
+#*.pkl
 *.joblib
 *.h5
 *.pt
