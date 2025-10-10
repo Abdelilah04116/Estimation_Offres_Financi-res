@@ -1,6 +1,6 @@
-# 🚀 Pipeline ML Avancé pour l'Estimation d'Offres
+#  Pipeline ML Avancé pour l'Estimation d'Offres
 
-## 📋 Vue d'ensemble
+##  Vue d'ensemble
 
 Ce projet propose une architecture ML avancée pour prédire les résultats d'appels d'offres avec deux objectifs principaux :
 - **Classification** : Prédire si une soumission gagnera (probabilité de succès)
@@ -8,9 +8,9 @@ Ce projet propose une architecture ML avancée pour prédire les résultats d'ap
 
 L'architecture a été conçue pour des serveurs avec des ressources importantes et intègre les dernières techniques de Machine Learning.
 
-## 🏗️ Architecture
+##  Architecture
 
-### 📁 Structure des fichiers
+###  Structure des fichiers
 
 ```
 Augmenterpresecion2/
@@ -25,7 +25,7 @@ Augmenterpresecion2/
 └── README.md                         # Ce fichier
 ```
 
-### 🔧 Modules principaux
+###  Modules principaux
 
 #### 1. **Advanced Feature Engineering** (`advanced_feature_engineering.py`)
 - **Features temporelles** : jour de la semaine, mois, saisonnalité
@@ -55,7 +55,7 @@ Augmenterpresecion2/
 - **Configuration flexible** : paramètres optimisables
 - **Sauvegarde automatique** : modèles et résultats
 
-## 🚀 Installation et utilisation
+##  Installation et utilisation
 
 ### 1. **Installation des dépendances**
 
@@ -75,9 +75,9 @@ python advanced_ml_pipeline.py
 streamlit run streamlit_app.py
 ```
 
-## 📊 Fonctionnalités avancées
+##  Fonctionnalités avancées
 
-### 🎯 **Optimisation des performances**
+###  **Optimisation des performances**
 
 #### **Feature Engineering**
 - **50+ features créées** automatiquement
@@ -97,7 +97,7 @@ streamlit run streamlit_app.py
 - **Sélection automatique** des meilleurs modèles
 - **Pondération optimisée** des prédictions
 
-### 📈 **Évaluation complète**
+###  **Évaluation complète**
 
 #### **Métriques de classification**
 - **ROC-AUC** avec intervalles de confiance
@@ -117,7 +117,7 @@ streamlit run streamlit_app.py
 - **Stabilité temporelle**
 - **Détection d'outliers**
 
-### 🎨 **Visualisations**
+###  **Visualisations**
 
 #### **Graphiques statiques** (Matplotlib/Seaborn)
 - Layout en grille 2x3
@@ -131,7 +131,7 @@ streamlit run streamlit_app.py
 - Hover information
 - Export dynamique
 
-## ⚙️ Configuration
+##  Configuration
 
 ### **Configuration par défaut optimisée**
 
@@ -173,7 +173,7 @@ custom_config = {
 pipeline = AdvancedMLPipeline(custom_config)
 ```
 
-## 📈 Objectifs de performance
+##  Objectifs de performance
 
 ### **Cibles définies**
 - **Classification** : AUC-ROC > 0.85
@@ -187,7 +187,7 @@ pipeline = AdvancedMLPipeline(custom_config)
 - **ROI des recommandations**
 - **Réduction des coûts** d'opportunité
 
-## 🔍 Monitoring et logging
+##  Monitoring et logging
 
 ### **Logs détaillés**
 - **Timestamps** pour chaque étape
@@ -209,7 +209,7 @@ logs/
 └── pipeline_results.json
 ```
 
-## 🛠️ Utilisation avancée
+##  Utilisation avancée
 
 ### **Entraînement personnalisé**
 
@@ -261,7 +261,7 @@ df = engineer.create_temporal_features(df)
 df = engineer.create_interaction_features(df)
 ```
 
-## 🚨 Dépannage
+##  Dépannage
 
 ### **Problèmes courants**
 
@@ -304,7 +304,7 @@ config = {
 }
 ```
 
-## 📚 Ressources additionnelles
+##  Ressources additionnelles
 
 ### **Documentation technique**
 - [Optuna Documentation](https://optuna.readthedocs.io/)
@@ -317,7 +317,7 @@ config = {
 - Feature selection automatique
 - Monitoring de la dérive
 
-## 🤝 Contribution
+##  Contribution
 
 Pour contribuer au projet :
 
@@ -326,10 +326,6 @@ Pour contribuer au projet :
 3. **Implémenter** les améliorations
 4. **Tester** avec le pipeline complet
 5. **Soumettre** une pull request
-
-## 📄 Licence
-
-Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
 
 ---
 
