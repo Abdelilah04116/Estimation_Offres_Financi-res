@@ -1,308 +1,221 @@
-# Modèle d'Estimation des Offres Financières pour les Appels d'Offres
+# Estimation d'Offres Financières
 
-##  Description du Projet
+Ce projet utilise l'apprentissage automatique pour prédire les montants des offres financières dans les appels d'offres marocains.
 
-Ce projet vise à développer un modèle prédictif intelligent pour estimer le montant optimal d'une offre financière dans un appel d'offres (AO), basé sur l'analyse des données historiques des marchés publics. Le système aide les entreprises à proposer des montants compétitifs en maximisant leurs chances de remporter les appels d'offres.
-
-##  Objectifs
-
-- **Estimation intelligente** : Proposer une fourchette de prix optimale (X DH à Y DH) pour maximiser les chances de gagner un AO
-- **Analyse concurrentielle** : Analyser les comportements passés des concurrents sur des AO similaires
-- **Simulation de probabilités** : Calculer la probabilité de succès selon différents montants proposés
-- **Recommandations automatisées** : Fournir des conseils du type "Pour maximiser vos chances (>60%), proposez entre X et Y DH"
-
-##  Architecture du Système
-
-```mermaid
-graph TB
-    A[Données Historiques AO] --> B[Collecte et Nettoyage]
-    B --> C[Feature Engineering]
-    C --> D[Modèle ML]
-    D --> E[API REST]
-    D --> F[Interface Utilisateur]
-    E --> G[Prédictions]
-    F --> G
-    
-    subgraph "Sources de Données"
-        H[Marches Publics]
-        I[Safakate]
-    end
-    
-    H --> A
-    I --> A
-    
-    subgraph "Technologies"
-        J[Scikit-learn]
-        K[XGBoost/LightGBM]
-        L[MLflow]
-        M[FastAPI/Flask]
-        N[Streamlit/React]
-    end
-    
-    J --> D
-    K --> D
-    L --> D
-    M --> E
-    N --> F
-```
-
-##  Flux de Traitement des Données
-
-```mermaid
-flowchart LR
-    A[Nouvel AO] --> B[Extraction Features]
-    B --> C[Liste Concurrents]
-    C --> D[Modèle Prédictif]
-    D --> E[Probabilité Succès]
-    D --> F[Fourchette Prix Recommandée]
-    E --> G[Recommandation Finale]
-    F --> G
-    
-    subgraph "Features Calculées"
-        H[Budget AO]
-        I[Type AO]
-        J[Taux Succès Concurrents]
-        K[Historique Prix]
-    end
-    
-    B --> H
-    B --> I
-    C --> J
-    C --> K
-```
-
-##  Pipeline de Machine Learning
-
-```mermaid
-graph TD
-    A[Données Brutes CSV] --> B[Préprocessing]
-    B --> C[Feature Engineering]
-    C --> D[Séparation Train/Test]
-    D --> E[Entraînement Modèle]
-    E --> F[Validation]
-    F --> G{Performance OK?}
-    G -->|Non| H[Optimisation Hyperparamètres]
-    H --> E
-    G -->|Oui| I[Modèle Final]
-    I --> J[Sauvegarde model.pkl]
-    J --> K[Déploiement API]
-    
-    subgraph "Modèles Testés"
-        L[Linear Regression]
-        M[Random Forest]
-        N[XGBoost]
-        O[LightGBM]
-    end
-    
-    E --> L
-    E --> M
-    E --> N
-    E --> O
-```
-
-##  Structure du Projet
+## 📁 Structure du Projet
 
 ```
-├── data/
-│   ├── raw/                 # Données brutes collectées
-│   ├── processed/           # Données nettoyées (CSV)
-│   └── features/            # Features engineered
-├── models/
-│   ├── model.pkl           # Modèle entraîné
-│   ├── preprocessing.pkl   # Pipeline de préprocessing
-│   └── experiments/        # Expériences MLflow
-├── src/
-│   ├── data_collection/    # Scripts de collecte
-│   ├── preprocessing/      # Nettoyage des données
-│   ├── feature_engineering/ # Création des features
-│   ├── modeling/           # Entraînement du modèle
-│   └── api/               # API REST
-├── app/
-│   ├── streamlit_app.py   # Interface Streamlit
-│   └── react_app/         # Interface React (optionnel)
-├── tests/                 # Tests unitaires
-├── docs/                  # Documentation
-├── requirements.txt       # Dépendances Python
-└── README.md             # Ce fichier
+Estimation_Offres_Financières/
+├── src/                          # Scripts Python principaux
+│   ├── advanced_feature_engineering.py
+│   ├── advanced_ml_pipeline.py
+│   ├── advanced_model_trainer.py
+│   ├── model_evaluation_dashboard.py
+│   ├── train_models.py
+│   ├── script.py
+│   ├── ml_pipeline.py
+│   ├── parse_simple.py
+│   ├── script_safakat.py
+│   ├── reorganize_safakat_data.py
+│   ├── diagnostic_csv.py
+│   └── faker/                    # Génération de données simulées
+│       ├── requirements.txt
+│       └── script.py
+│
+├── app/                          # Application Streamlit
+│   └── streamlit_app.py
+│
+├── data/                         # Datasets
+│   ├── appels_offres_zero_null.csv
+│   ├── appels_offres_zero_null.json
+│   ├── appels_offres.csv
+│   ├── safakat_aos_organises.csv
+│   ├── safakat_lots_detailles.csv
+│   └── faker_data/               # Données simulées
+│       ├── appels_offres_maroc_simules.csv
+│       └── Safakat Test 1000 AOs.csv
+│
+├── models/                       # Modèles entraînés
+│   ├── encoders.pkl
+│   ├── feature_columns.pkl
+│   ├── model_classification.pkl
+│   ├── model_regression.pkl
+│   └── scaler.pkl
+│
+├── extras/                       # Fichiers supplémentaires
+│   ├── model_validation_results.png
+│   ├── presentation_data copy.ipynb
+│   ├── Augmenterpresecion2.zip
+│   └── Ourti Abdelilah.zip
+│
+├── README.md
+├── .gitignore
+└── requirements.txt
 ```
 
-##  Technologies Utilisées
+## 🚀 Installation
 
-### Collecte de Données
-- **Sources** : Marches Publics, Safakate
-- **Format** : CSV structuré
-
-### Machine Learning
-- **Scikit-learn** : Classification et régression
-- **XGBoost/LightGBM** : Modèles performants pour données tabulaires
-- **MLflow** : Suivi des expériences et versioning des modèles
-
-### API et Interface
-- **FastAPI/Flask** : API REST
-- **Streamlit/React** : Interface utilisateur
-- **SHAP** : Explicabilité du modèle (optionnel)
-
-##  Installation
-
-1. **Cloner le repository**
+### 1. Cloner le projet
 ```bash
-git clone https://github.com/Abdelilah04116/Estimation_Offres_Financi-res
-cd Estimation_Offres_Financi-res
+git clone <repository-url>
+cd Estimation_Offres_Financières
+git checkout vps
 ```
 
-2. **Créer un environnement virtuel**
+### 2. Créer un environnement virtuel
 ```bash
 python -m venv venv
-source venv/bin/activate  # Sur Windows: venv\Scripts\activate
+# Sur Windows
+venv\Scripts\activate
+# Sur Linux/Mac
+source venv/bin/activate
 ```
 
-3. **Installer les dépendances**
+### 3. Installer les dépendances
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Configuration de l'environnement**
+## 📊 Préparation des Données
+
+### 1. Données principales
+Les fichiers de données principaux se trouvent dans le dossier `data/` :
+- `appels_offres_zero_null.csv` : Dataset principal nettoyé
+- `appels_offres.csv` : Dataset original
+- `safakat_aos_organises.csv` : Données Safakat organisées
+- `safakat_lots_detailles.csv` : Lots détaillés Safakat
+
+### 2. Génération de données simulées (optionnel)
+Pour générer des données simulées supplémentaires :
 ```bash
-cp .env.example .env
-# Modifier les variables d'environnement selon vos besoins
+cd src/faker
+pip install -r requirements.txt
+python script.py
 ```
 
-##  Utilisation
+## 🤖 Entraînement des Modèles
 
-### 1. Collecte des Données
+### 1. Entraînement sur petit dataset (test rapide)
 ```bash
-python src/data_collection/scraper.py
+python src/train_models.py --quick-test
 ```
 
-### 2. Préprocessing
+### 2. Entraînement complet
 ```bash
-python src/preprocessing/clean_data.py
+python src/train_models.py
 ```
 
-### 3. Entraînement du Modèle
+### 3. Pipeline avancé avec optimisation d'hyperparamètres
 ```bash
-python src/modeling/train_model.py
+python src/advanced_model_trainer.py
 ```
 
-### 4. Lancement de l'API
+### 4. Pipeline ML complet
 ```bash
-uvicorn src.api.main:app --reload
+python src/advanced_ml_pipeline.py
 ```
 
-### 5. Interface Utilisateur
+## 🎯 Utilisation de l'Application
+
+### Lancer l'application Streamlit
 ```bash
 streamlit run app/streamlit_app.py
 ```
 
-##  API Endpoints
+L'application sera accessible à l'adresse : `http://localhost:8501`
 
-### Prédiction d'Offre
-```http
-POST /predict
-Content-Type: application/json
+## 📈 Évaluation des Modèles
 
-{
-  "ao_data": {
-    "budget": 50000,
-    "type": "travaux",
-    "maitre_ouvrage": "Ministère",
-    "delai_execution": 6
-  },
-  "concurrents": [
-    {"nom": "Entreprise A", "historique_prix": [25000, 30000, 28000]},
-    {"nom": "Entreprise B", "historique_prix": [26000, 29000, 27500]}
-  ],
-  "montant_propose": 27000
-}
+### Dashboard d'évaluation
+```bash
+python src/model_evaluation_dashboard.py
 ```
 
-**Réponse :**
-```json
-{
-  "probabilite_succes": 0.67,
-  "fourchette_recommandee": {
-    "min": 27500,
-    "max": 28500
-  },
-  "conseil": "Proposez entre 27500 et 28500 DH pour rester compétitif contre vos concurrents",
-  "facteurs_influents": {
-    "budget_ratio": 0.55,
-    "competition_niveau": "moyen",
-    "historique_concurrent": "favorable"
-  }
-}
+### Validation des résultats
+Les résultats de validation sont sauvegardés dans `extras/model_validation_results.png`
+
+## 🔧 Scripts Utilitaires
+
+### Diagnostic des données CSV
+```bash
+python src/diagnostic_csv.py
 ```
 
-##  Exemple d'Usage
-
-```python
-from src.api.predictor import AOPredictor
-
-# Initialiser le prédicteur
-predictor = AOPredictor()
-
-# Charger un nouvel AO
-ao_data = {
-    "reference": "AO-2025-001",
-    "budget": 50000,
-    "type": "consultation",
-    "maitre_ouvrage": {"nom": "Commune de Rabat"}
-}
-
-# Liste des concurrents
-concurrents = [
-    {"nom": "Cabinet A",....},
-    {"nom": "Cabinet B",....}
-]
-
-# Obtenir la prédiction
-result = predictor.predict(ao_data, concurrents, montant_propose=28000)
-
-print(f"Probabilité de succès : {result['probabilite_succes']}")
-print(f"Recommandation : {result['conseil']}")
+### Parsing simple de données
+```bash
+python src/parse_simple.py
 ```
 
-##  Métriques et Performance
+### Réorganisation des données Safakat
+```bash
+python src/reorganize_safakat_data.py
+```
 
-Le modèle est évalué sur les métriques suivantes :
-- **Accuracy** : Précision de prédiction binaire (gagné/perdu)
-- **ROC-AUC** : Aire sous la courbe ROC
-- **Precision/Recall** : Pour les classes déséquilibrées
-- **Mean Absolute Error** : Pour l'estimation des montants
+### Script Safakat
+```bash
+python src/script_safakat.py
+```
 
-##  Features Importantes
+## 📋 Fonctionnalités Principales
 
-Le modèle utilise les features suivantes :
-- **Budget de l'AO** : Montant total disponible
-- **Type d'AO** : Travaux, consultation, fournitures
-- **Ratio prix/budget** : Montant proposé / Budget total
-- **Nombre de concurrents** : Niveau de compétition
-- **Historique des concurrents** : Taux de succès, prix moyens
-- **Caractéristiques temporelles** : Délai d'exécution, période de l'année
+- **Prédiction de montants** : Prédiction des montants d'offres financières
+- **Classification** : Classification des types d'offres
+- **Feature Engineering** : Ingénierie des caractéristiques avancée
+- **Optimisation d'hyperparamètres** : Recherche automatique des meilleurs paramètres
+- **Visualisation** : Dashboard interactif pour l'évaluation des modèles
+- **Génération de données** : Création de données simulées pour les tests
 
-##  Roadmap
+## 🛠️ Technologies Utilisées
 
-- [x] Collecte et nettoyage des données
-- [x] Feature engineering et analyse exploratoire
-- [x] Développement du modèle de base
-- [ ] Optimisation des hyperparamètres
-- [ ] Intégration SHAP pour l'explicabilité
-- [ ] Déploiement de l'API en production
-- [ ] Interface utilisateur avancée
-- [ ] Tests et validation sur nouveaux données
+- **Python 3.8+**
+- **Scikit-learn** : Algorithmes ML de base
+- **XGBoost, LightGBM, CatBoost** : Algorithmes de gradient boosting
+- **Streamlit** : Interface utilisateur web
+- **Pandas, NumPy** : Manipulation de données
+- **Plotly, Matplotlib, Seaborn** : Visualisation
+- **Optuna, Hyperopt** : Optimisation d'hyperparamètres
+- **SHAP, LIME** : Interprétabilité des modèles
+- **Faker** : Génération de données simulées
 
+## 📁 Fichiers Supplémentaires
 
+### Fichiers ZIP
+- `Augmenterpresecion2.zip` : Archive du dossier de développement avancé
+- `Ourti Abdelilah.zip` : Archive contenant des analyses supplémentaires
 
-##  Auteur
+### Notebooks Jupyter
+- `presentation_data copy.ipynb` : Notebook d'analyse et de présentation des données
 
-**Abdelilah OURTI**
-- Stage : Juillet - Septembre 2025
-- Entreprise : TECFORGE
+### Images
+- `model_validation_results.png` : Graphiques de validation des modèles
+
+## 🤝 Contribution
+
+1. Fork le projet
+2. Créer une branche feature (`git checkout -b feature/nouvelle-fonctionnalite`)
+3. Commit les changements (`git commit -am 'Ajouter nouvelle fonctionnalité'`)
+4. Push vers la branche (`git push origin feature/nouvelle-fonctionnalite`)
+5. Créer une Pull Request
+
+## 📝 Notes
+
+- Les modèles entraînés sont sauvegardés dans le dossier `models/`
+- Les données sensibles ne doivent pas être commitées (voir `.gitignore`)
+- Utilisez l'environnement virtuel pour éviter les conflits de dépendances
+- Les données simulées sont générées avec Faker et peuvent être utilisées pour les tests
+
+## 🐛 Dépannage
+
+### Problèmes courants
+
+1. **Erreur de dépendances** : Vérifiez que toutes les dépendances sont installées avec `pip install -r requirements.txt`
+
+2. **Erreur de chemins** : Assurez-vous d'exécuter les scripts depuis la racine du projet
+
+3. **Erreur de modèles** : Vérifiez que les modèles sont entraînés avant de lancer l'application
+
+4. **Problème de mémoire** : Utilisez l'option `--quick-test` pour les tests rapides
 
 ## 📞 Support
 
-Pour toute question ou support, veuillez contacter :
-- Email : abdelilahourti@gmail.com
-
-
----
+Pour toute question ou problème, veuillez créer une issue sur le repository GitHub.

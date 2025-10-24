@@ -1,41 +1,70 @@
-# Ignorer les fichiers d'environnement
-env
-#*.pkl
-*.joblib
-*.h5
-*.pt
-*.sav
-*.model
-
-# Ignorer les fichiers de données
-*.csv
-*.tsv
-*.xls
-*.xlsx
-
-# Ignorer les dossiers contenant les modèles ou données
-/models/
-/data/
-
-# Cache, logs et autres fichiers générés automatiquement
-*.log
-*.tmp
-*.cache
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Environnements virtuels
-.venv/
-env/
+# Virtual environments
 venv/
+env/
+ENV/
+env.bak/
+venv.bak/
 
-# Fichiers Jupyter Notebook checkpoints
-.ipynb_checkpoints/
-
-# Configuration IDE (VSCode, PyCharm, etc.)
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# OS-generated files
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Data files (uncomment if you don't want to track data)
+# data/
+# *.csv
+# *.json
+
+# Model files (uncomment if you don't want to track models)
+# models/
+# *.pkl
+# *.joblib
+
+# Logs
+*.log
+logs/
+
+# OS
 .DS_Store
 Thumbs.db
+
+# Streamlit
+.streamlit/
+
+# MLflow
+mlruns/
+
+# Weights & Biases
+wandb/
+
+# Temporary files
+*.tmp
+*.temp
